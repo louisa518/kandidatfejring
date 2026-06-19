@@ -23,6 +23,11 @@
                 <p>Se hvem der er inviteret, og hvem der har svaret.</p>
             </section>
 
+            <section class="info-card" id="liveStatusCard">
+                <h2>Live status</h2>
+                <p id="liveStatusText">Forbinder til Firebase…</p>
+            </section>
+
             <section class="status-card invited full-width">
                 <h2>Inviteret <span id="invitedCount"></span></h2>
                 <ul id="invitedList"></ul>
@@ -78,7 +83,8 @@
             maybeCount: document.getElementById("maybeCount"),
             noCount: document.getElementById("noCount"),
             waitingCount: document.getElementById("waitingCount"),
-            yourResponse: document.getElementById("yourResponse")
+            yourResponse: document.getElementById("yourResponse"),
+            liveStatusText: document.getElementById("liveStatusText")
         };
 
         function createListItem(text) {
@@ -103,6 +109,32 @@
             }
         }
 
+        function normalizeAnswer(answer) {
+            if (!answer) return "";
+            const value = String(answer).trim().toLowerCase();
+
+            if (value === "ja" || value === "yes") return "Ja";
+            if (value === "måske" || value === "maaske" || value === "maybe") return "Måske";
+            if (value === "nej" || value === "no") return "Nej";
+
+            return "";
+        }
+
+        function getAnswer(data, userKey) {
+            const record = data?.[userKey];
+
+            // Understøtter både ny struktur:
+            // rsvps/Louisa/answer = "Nej"
+            // og simpel struktur:
+            // rsvps/Louisa = "Nej"
+            if (typeof record === "string") return normalizeAnswer(record);
+            if (record && typeof record === "object") {
+                return normalizeAnswer(record.answer || record.status || record.response);
+            }
+
+            return "";
+        }
+
         function renderLists(data) {
             clearLists();
 
@@ -110,21 +142,25 @@
             let maybe = 0;
             let no = 0;
             let waiting = 0;
+            let answered = 0;
 
             INVITED_USERS.forEach(invitedUser => {
                 const displayName = invitedUser.role ? `${invitedUser.name} (${invitedUser.role})` : invitedUser.name;
-                const answer = data[invitedUser.key]?.answer || "";
+                const answer = getAnswer(data, invitedUser.key);
 
                 elements.invitedList.appendChild(createListItem(displayName));
 
                 if (answer === "Ja") {
                     attending += 1;
+                    answered += 1;
                     elements.attendingList.appendChild(createListItem(invitedUser.name));
                 } else if (answer === "Måske") {
                     maybe += 1;
+                    answered += 1;
                     elements.maybeList.appendChild(createListItem(invitedUser.name));
                 } else if (answer === "Nej") {
                     no += 1;
+                    answered += 1;
                     elements.noList.appendChild(createListItem(invitedUser.name));
                 } else {
                     waiting += 1;
@@ -143,16 +179,18 @@
             addEmptyText(elements.noList, "Ingen endnu");
             addEmptyText(elements.waitingList, "Alle har svaret");
 
-            const yourAnswer = data[currentUser]?.answer || localStorage.getItem(`rsvp-${currentUser}`) || "";
+            const yourAnswer = getAnswer(data, currentUser) || localStorage.getItem(`rsvp-${currentUser}`) || "";
             elements.yourResponse.textContent = yourAnswer ? `Du svarede: ${yourAnswer}` : "Du har ikke svaret endnu.";
+            elements.liveStatusText.textContent = `Forbundet til Firebase. ${answered} ud af ${INVITED_USERS.length} har svaret.`;
         }
 
         listenToRsvps(
             renderLists,
             error => {
                 console.error(error);
+                elements.liveStatusText.textContent = "Firebase er ikke forbundet. Tjek firebase-config.js og dine database-regler.";
+                elements.yourResponse.textContent = "Firebase er ikke forbundet endnu.";
                 renderLists({});
-                elements.yourResponse.textContent = "Firebase er ikke forbundet endnu. Tjek firebase-config.js og dine database-regler.";
             }
         );
     </script>

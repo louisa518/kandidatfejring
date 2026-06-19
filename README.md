@@ -1,6 +1,10 @@
 # Kandidatfejring RSVP
 
-Dette er en statisk RSVP-side, der kan uploades til GitHub Pages. Svar gemmes live i Firebase Realtime Database.
+Dette er en statisk RSVP-side til GitHub Pages. Svar gemmes live i Firebase Realtime Database.
+
+## Vigtigt
+
+`responses.json` bruges ikke længere. Live-svar hentes fra Firebase.
 
 ## Før du uploader
 
@@ -21,7 +25,25 @@ Gå til Firebase Console → Realtime Database → Rules.
 
 Indsæt indholdet fra `firebase-rules.json`, og tryk `Publish`.
 
-Reglerne tillader, at siden læser RSVP-svar og kun skriver svar for de inviterede fornavne.
+## Tjek at live virker
+
+Når Louisa svarer `Nej`, skal Firebase se cirka sådan ud:
+
+```json
+{
+  "rsvps": {
+    "Louisa": {
+      "answer": "Nej",
+      "name": "Louisa",
+      "updatedAt": 123456789
+    }
+  }
+}
+```
+
+Hvis svaret ikke står under `rsvps/Louisa`, er det kun gemt lokalt i browseren og ikke live.
+
+Hvis `guest-list.html` ikke viser kortet `Mangler svar` og teksten `Live status`, er det den gamle fil, der stadig er uploadet eller cachet.
 
 ## Upload til GitHub Pages
 
@@ -32,19 +54,3 @@ Reglerne tillader, at siden læser RSVP-svar og kun skriver svar for de invitere
 5. Tryk `Save`.
 
 Når GitHub Pages er færdig, får du et link, du kan sende til gæsterne.
-
-## Login
-
-Gæster logger ind med:
-
-- Brugernavn: fornavn med stort begyndelsesbogstav
-- Kode: fornavn med stort begyndelsesbogstav efterfulgt af `123`
-
-Eksempel:
-
-- Brugernavn: `Jens`
-- Kode: `Jens123`
-
-## Vigtigt
-
-Dette er en enkel løsning til en privat invitation. Login er ikke stærk sikkerhed, fordi siden ligger som statisk kode på GitHub Pages. Det er fint til en lille fejring, men ikke til følsomme oplysninger.
