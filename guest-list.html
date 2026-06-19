@@ -61,6 +61,7 @@
             <section class="info-card" id="yourResponseCard">
                 <h2>Dit svar</h2>
                 <p id="yourResponse">Indlæser dit svar…</p>
+                <p id="refreshStatus" style="margin-top: 14px; color: var(--muted);">Henter live-opdateringer...</p>
             </section>
 
             <section class="info-card">
@@ -72,6 +73,7 @@
     <script>
         const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/louisa518/kandidatfejring/main/responses.json';
         const yourResponse = document.getElementById('yourResponse');
+        const refreshStatus = document.getElementById('refreshStatus');
         const attendingList = document.getElementById('attendingList');
         const maybeList = document.getElementById('maybeList');
         const noList = document.getElementById('noList');
@@ -108,17 +110,26 @@
             yourResponse.textContent = answer ? `Du svarede: ${answer}` : 'Du har ikke svaret endnu.';
         }
 
+        function updateRefreshStatus(message) {
+            refreshStatus.textContent = message;
+        }
+
         async function loadResponses() {
+            updateRefreshStatus('Henter live-opdateringer...');
+
             try {
-                const response = await fetch(GITHUB_RAW_URL);
+                const cacheBuster = `?t=${Date.now()}`;
+                const response = await fetch(GITHUB_RAW_URL + cacheBuster, { cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
                 const data = await response.json();
                 populateLists(data);
                 showYourResponse(data[currentUser]);
+                updateRefreshStatus(`Opdateret ${new Date().toLocaleTimeString()}`);
             } catch (error) {
                 console.warn('Fejl ved hentning fra GitHub. Bruger lokal fallback:', error);
+                updateRefreshStatus('Kunne ikke hente live-opdateringer. Viser lokal data i stedet.');
                 const data = {};
                 invitedUsers.forEach(name => {
                     const saved = localStorage.getItem(`rsvp-${name}`);
