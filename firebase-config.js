@@ -1,15 +1,16 @@
 // Firebase-konfiguration
-// Find den i Firebase Console → Project settings → Your apps → Web app.
-// Erstat især apiKey, messagingSenderId og appId med dine rigtige værdier.
+// Denne fil bruges direkte af GitHub Pages-versionen.
+// Firebase web config er offentlig i frontend, men databasen skal beskyttes med Firebase Rules.
 
 export const firebaseConfig = {
-  apiKey: "INDSAET_DIN_API_KEY_HER",
+  apiKey: "AIzaSyAN7wle8SLUFYB3sD0lYe2AFGZM6sIjtSM",
   authDomain: "kandidatfejring.firebaseapp.com",
   databaseURL: "https://kandidatfejring-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "kandidatfejring",
-  storageBucket: "kandidatfejring.appspot.com",
-  messagingSenderId: "INDSAET_DIN_MESSAGING_SENDER_ID_HER",
-  appId: "INDSAET_DIN_APP_ID_HER"
+  storageBucket: "kandidatfejring.firebasestorage.app",
+  messagingSenderId: "487960714691",
+  appId: "1:487960714691:web:07a01f5d66a7ae9cb53176",
+  measurementId: "G-5LE7107B39"
 };
 
 export function isFirebaseConfigured() {
