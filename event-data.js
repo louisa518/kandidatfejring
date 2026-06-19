@@ -1,25 +1,40 @@
-export const INVITED_USERS = [
-  { key: "Louisa", name: "Louisa Xu", role: "Admin" },
-  { key: "Anders", name: "Anders Ørsted" },
-  { key: "Emma", name: "Emma Juan Roug Nielsen" },
-  { key: "Frederik", name: "Frederik Hoffmann Bertelsen" },
-  { key: "Gustav", name: "Gustav Lunding Smith" },
-  { key: "Julius", name: "Julius Winkel" },
-  { key: "Kasper", name: "Kasper Petersen" },
-  { key: "Laura", name: "Laura Rovsing Meiborg" },
-  { key: "Marie", name: "Marie Samsøe" },
-  { key: "Nicolai", name: "Nicolai Sode Mikkelsen" },
-  { key: "Maya", name: "Maya Findshøj" }
+export const BUILT_IN_GUESTS = [
+  { username: "Louisa", fullName: "Louisa Xu", isAdmin: true },
+  { username: "Anders", fullName: "Anders Ørsted", isAdmin: false },
+  { username: "Emma", fullName: "Emma Juan Roug Nielsen", isAdmin: false },
+  { username: "Frederik", fullName: "Frederik Hoffmann Bertelsen", isAdmin: false },
+  { username: "Gustav", fullName: "Gustav Lunding Smith", isAdmin: false },
+  { username: "Julius", fullName: "Julius Winkel", isAdmin: false },
+  { username: "Kasper", fullName: "Kasper Petersen", isAdmin: false },
+  { username: "Laura", fullName: "Laura Rovsing Meiborg", isAdmin: false },
+  { username: "Marie", fullName: "Marie Samsøe", isAdmin: false },
+  { username: "Nicolai", fullName: "Nicolai Sode Mikkelsen", isAdmin: false },
+  { username: "Maya", fullName: "Maya Findshøj", isAdmin: false }
 ];
 
-export const VALID_ANSWERS = ["Ja", "Måske", "Nej"];
+export const EVENT_INFO = {
+  title: "Forsinket kandidatfejring",
+  host: "Louisa Xu",
+  date: "Tirsdag den 7. juli",
+  time: "Kl. 13.00 – 21.00",
+  address: "Holger Danskes Vej 28, 2000 Frederiksberg"
+};
 
-export function getUserByKey(key) {
-  return INVITED_USERS.find(user => user.key === key) || null;
-}
+export const ANSWERS = ["Ja", "Måske", "Nej"];
 
 export function normalizeUsername(value) {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+  const cleaned = String(value || "")
+    .trim()
+    .replace(/\s+/g, " ");
+
+  if (!cleaned) return "";
+
+  return cleaned
+    .split(" ")[0]
+    .toLocaleLowerCase("da-DK")
+    .replace(/^./, char => char.toLocaleUpperCase("da-DK"));
+}
+
+export function expectedPassword(username) {
+  return `${username}123`;
 }

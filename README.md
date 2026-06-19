@@ -1,56 +1,107 @@
-# Kandidatfejring RSVP
+# Kandidatfejring - live invitation
 
-Dette er en statisk RSVP-side til GitHub Pages. Svar gemmes live i Firebase Realtime Database.
+Denne version er lavet som én samlet invitation-app med:
 
-## Vigtigt
+- Login
+- Info-side
+- Live RSVP
+- News/opslag
+- Live stats og gæsteliste
+- Adminpanel for Louisa
+- Firebase Realtime Database
+- GitHub Pages-kompatibel statisk hjemmeside
 
-`responses.json` bruges ikke længere. Live-svar hentes fra Firebase.
+## 1. Indsæt Firebase config
 
-## Før du uploader
-
-1. Åbn `firebase-config.js`.
-2. Gå til Firebase Console → Project settings → Your apps → Web app.
-3. Kopiér din Firebase config ind i `firebase-config.js`.
-4. `databaseURL` er allerede sat til:
+Åbn `firebase-config.js` og erstat placeholderne:
 
 ```js
+apiKey: "INDSAET_DIN_API_KEY_HER",
+messagingSenderId: "INDSAET_DIN_MESSAGING_SENDER_ID_HER",
+appId: "INDSAET_DIN_APP_ID_HER"
+```
+
+Find værdierne her:
+
+Firebase Console → Project settings → Your apps → Web app
+
+Database URL er allerede sat til:
+
+```txt
 https://kandidatfejring-default-rtdb.europe-west1.firebasedatabase.app
 ```
 
-Du skal især huske at indsætte `apiKey` og `appId`.
+## 2. Sæt Firebase Rules
 
-## Firebase rules
+Gå til:
 
-Gå til Firebase Console → Realtime Database → Rules.
+Realtime Database → Rules
 
-Indsæt indholdet fra `firebase-rules.json`, og tryk `Publish`.
+Kopiér indholdet fra `firebase-rules.json` og tryk Publish.
 
-## Tjek at live virker
-
-Når Louisa svarer `Nej`, skal Firebase se cirka sådan ud:
+Til hurtig test kan du midlertidigt bruge helt åbne regler:
 
 ```json
 {
-  "rsvps": {
-    "Louisa": {
-      "answer": "Nej",
-      "name": "Louisa",
-      "updatedAt": 123456789
-    }
+  "rules": {
+    ".read": true,
+    ".write": true
   }
 }
 ```
 
-Hvis svaret ikke står under `rsvps/Louisa`, er det kun gemt lokalt i browseren og ikke live.
+Når siden virker, kan du sætte reglerne fra `firebase-rules.json` ind igen.
 
-Hvis `guest-list.html` ikke viser kortet `Mangler svar` og teksten `Live status`, er det den gamle fil, der stadig er uploadet eller cachet.
+## 3. Upload til GitHub
 
-## Upload til GitHub Pages
+Upload alle filer direkte i roden af dit repository.
 
-1. Upload alle filerne i denne mappe til dit GitHub repository.
-2. Gå til repository → Settings → Pages.
-3. Vælg `Deploy from a branch`.
-4. Vælg branch `main` og folder `/root`.
-5. Tryk `Save`.
+Det skal ligge sådan:
 
-Når GitHub Pages er færdig, får du et link, du kan sende til gæsterne.
+```txt
+kandidatfejring/
+  index.html
+  app.js
+  styles.css
+  firebase-config.js
+  event-data.js
+  firebase-rules.json
+  event-image.png
+  README.md
+```
+
+Ikke inde i en ekstra mappe.
+
+## 4. GitHub Pages
+
+Gå til:
+
+Settings → Pages → Deploy from a branch → main → root → Save
+
+Dit link bliver fortsat:
+
+```txt
+https://louisa518.github.io/kandidatfejring/
+```
+
+## Login
+
+Gæster logger ind med fornavn og fornavn + 123.
+
+Eksempel:
+
+```txt
+Brugernavn: Maya
+Kode: Maya123
+```
+
+Louisa har adminpanel:
+
+```txt
+Brugernavn: Louisa
+Kode: Louisa123
+```
+
+## Vigtigt
+
+Dette er en enkel invitationsløsning uden rigtig Firebase Authentication. Det er fint til en privat festside, men ikke til følsomme data.
