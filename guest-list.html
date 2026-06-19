@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forsinket kandidatfejring - Louisa Xu</title>
+    <title>Gæsteliste - Forsinket kandidatfejring</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -20,128 +20,141 @@
         <main class="content">
             <section class="hero-card small">
                 <h1>Gæsteliste</h1>
-                <p>Se hvem der er inviteret og deres svarstatus.</p>
+                <p>Se hvem der er inviteret, og hvem der har svaret.</p>
             </section>
 
             <section class="status-card invited full-width">
-                <h2>Inviteret</h2>
-                <ul>
-                    <li>Louisa Xu (Admin)</li>
-                    <li>Anders Ørsted</li>
-                    <li>Emma Juan Roug Nielsen</li>
-                    <li>Frederik Hoffmann Bertelsen</li>
-                    <li>Gustav Lunding Smith</li>
-                    <li>Julius Winkel</li>
-                    <li>Kasper Petersen</li>
-                    <li>Laura Rovsing Meiborg</li>
-                    <li>Marie Samsøe</li>
-                    <li>Nicolai Sode Mikkelsen</li>
-                    <li>Maya Findshøj</li>
-                </ul>
+                <h2>Inviteret <span id="invitedCount"></span></h2>
+                <ul id="invitedList"></ul>
             </section>
 
             <section class="status-grid">
                 <div class="status-card attending">
-                    <h2>Deltager</h2>
-                    <ul id="attendingList">
-                    </ul>
+                    <h2>Deltager <span id="attendingCount"></span></h2>
+                    <ul id="attendingList"></ul>
                 </div>
                 <div class="status-card maybe">
-                    <h2>Måske</h2>
-                    <ul id="maybeList">
-                    </ul>
+                    <h2>Måske <span id="maybeCount"></span></h2>
+                    <ul id="maybeList"></ul>
                 </div>
                 <div class="status-card no">
-                    <h2>Deltager ikke</h2>
-                    <ul id="noList">
-                    </ul>
+                    <h2>Deltager ikke <span id="noCount"></span></h2>
+                    <ul id="noList"></ul>
+                </div>
+                <div class="status-card waiting">
+                    <h2>Mangler svar <span id="waitingCount"></span></h2>
+                    <ul id="waitingList"></ul>
                 </div>
             </section>
 
             <section class="info-card" id="yourResponseCard">
                 <h2>Dit svar</h2>
                 <p id="yourResponse">Indlæser dit svar…</p>
-                <p id="refreshStatus" style="margin-top: 14px; color: var(--muted);">Henter live-opdateringer...</p>
             </section>
 
             <section class="info-card">
-                <p>Vil du ændre dit svar? Tryk på "Svar" øverst.</p>
+                <p>Vil du ændre dit svar? Tryk på “Svar” øverst.</p>
             </section>
         </main>
     </div>
 
-    <script>
-        const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/louisa518/kandidatfejring/main/responses.json';
-        const yourResponse = document.getElementById('yourResponse');
-        const refreshStatus = document.getElementById('refreshStatus');
-        const attendingList = document.getElementById('attendingList');
-        const maybeList = document.getElementById('maybeList');
-        const noList = document.getElementById('noList');
-        const currentUser = localStorage.getItem('event-user');
-        const invitedUsers = ['Louisa','Anders','Emma','Frederik','Gustav','Julius','Kasper','Laura','Marie','Nicolai','Maya'];
+    <script type="module">
+        import { INVITED_USERS, getUserByKey } from "./event-data.js";
+        import { listenToRsvps } from "./firebase-rsvp.js";
 
-        if (!currentUser) {
-            window.location.href = 'index.html';
-        }
+        const currentUser = localStorage.getItem("event-user");
+        const user = getUserByKey(currentUser);
 
-        function createListItem(name) {
-            const listItem = document.createElement('li');
-            listItem.textContent = name;
+        if (!currentUser || !user) window.location.href = "index.html";
+
+        const elements = {
+            invitedList: document.getElementById("invitedList"),
+            attendingList: document.getElementById("attendingList"),
+            maybeList: document.getElementById("maybeList"),
+            noList: document.getElementById("noList"),
+            waitingList: document.getElementById("waitingList"),
+            invitedCount: document.getElementById("invitedCount"),
+            attendingCount: document.getElementById("attendingCount"),
+            maybeCount: document.getElementById("maybeCount"),
+            noCount: document.getElementById("noCount"),
+            waitingCount: document.getElementById("waitingCount"),
+            yourResponse: document.getElementById("yourResponse")
+        };
+
+        function createListItem(text) {
+            const listItem = document.createElement("li");
+            listItem.textContent = text;
             return listItem;
         }
 
-        function populateLists(data) {
-            attendingList.innerHTML = '';
-            maybeList.innerHTML = '';
-            noList.innerHTML = '';
-
-            invitedUsers.forEach(name => {
-                const answer = data[name] || '';
-                if (!answer) return;
-
-                const listItem = createListItem(name);
-                if (answer === 'Ja') attendingList.appendChild(listItem);
-                else if (answer === 'Måske') maybeList.appendChild(listItem);
-                else if (answer === 'Nej') noList.appendChild(listItem);
-            });
+        function clearLists() {
+            elements.invitedList.innerHTML = "";
+            elements.attendingList.innerHTML = "";
+            elements.maybeList.innerHTML = "";
+            elements.noList.innerHTML = "";
+            elements.waitingList.innerHTML = "";
         }
 
-        function showYourResponse(answer) {
-            yourResponse.textContent = answer ? `Du svarede: ${answer}` : 'Du har ikke svaret endnu.';
-        }
-
-        function updateRefreshStatus(message) {
-            refreshStatus.textContent = message;
-        }
-
-        async function loadResponses() {
-            updateRefreshStatus('Henter live-opdateringer...');
-
-            try {
-                const cacheBuster = `?t=${Date.now()}`;
-                const response = await fetch(GITHUB_RAW_URL + cacheBuster, { cache: 'no-store' });
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                const data = await response.json();
-                populateLists(data);
-                showYourResponse(data[currentUser]);
-                updateRefreshStatus(`Opdateret ${new Date().toLocaleTimeString()}`);
-            } catch (error) {
-                console.warn('Fejl ved hentning fra GitHub. Bruger lokal fallback:', error);
-                updateRefreshStatus('Kunne ikke hente live-opdateringer. Viser lokal data i stedet.');
-                const data = {};
-                invitedUsers.forEach(name => {
-                    const saved = localStorage.getItem(`rsvp-${name}`);
-                    if (saved) data[name] = saved;
-                });
-                populateLists(data);
-                showYourResponse(data[currentUser]);
+        function addEmptyText(list, text) {
+            if (!list.children.length) {
+                const item = createListItem(text);
+                item.classList.add("empty-text");
+                list.appendChild(item);
             }
         }
 
-        loadResponses();
-        setInterval(loadResponses, 2000);
+        function renderLists(data) {
+            clearLists();
+
+            let attending = 0;
+            let maybe = 0;
+            let no = 0;
+            let waiting = 0;
+
+            INVITED_USERS.forEach(invitedUser => {
+                const displayName = invitedUser.role ? `${invitedUser.name} (${invitedUser.role})` : invitedUser.name;
+                const answer = data[invitedUser.key]?.answer || "";
+
+                elements.invitedList.appendChild(createListItem(displayName));
+
+                if (answer === "Ja") {
+                    attending += 1;
+                    elements.attendingList.appendChild(createListItem(invitedUser.name));
+                } else if (answer === "Måske") {
+                    maybe += 1;
+                    elements.maybeList.appendChild(createListItem(invitedUser.name));
+                } else if (answer === "Nej") {
+                    no += 1;
+                    elements.noList.appendChild(createListItem(invitedUser.name));
+                } else {
+                    waiting += 1;
+                    elements.waitingList.appendChild(createListItem(invitedUser.name));
+                }
+            });
+
+            elements.invitedCount.textContent = `(${INVITED_USERS.length})`;
+            elements.attendingCount.textContent = `(${attending})`;
+            elements.maybeCount.textContent = `(${maybe})`;
+            elements.noCount.textContent = `(${no})`;
+            elements.waitingCount.textContent = `(${waiting})`;
+
+            addEmptyText(elements.attendingList, "Ingen endnu");
+            addEmptyText(elements.maybeList, "Ingen endnu");
+            addEmptyText(elements.noList, "Ingen endnu");
+            addEmptyText(elements.waitingList, "Alle har svaret");
+
+            const yourAnswer = data[currentUser]?.answer || localStorage.getItem(`rsvp-${currentUser}`) || "";
+            elements.yourResponse.textContent = yourAnswer ? `Du svarede: ${yourAnswer}` : "Du har ikke svaret endnu.";
+        }
+
+        listenToRsvps(
+            renderLists,
+            error => {
+                console.error(error);
+                renderLists({});
+                elements.yourResponse.textContent = "Firebase er ikke forbundet endnu. Tjek firebase-config.js og dine database-regler.";
+            }
+        );
     </script>
 </body>
 </html>

@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "rsvps": {
+      ".read": true,
+      "$user": {
+        ".write": "$user === 'Louisa' || $user === 'Anders' || $user === 'Emma' || $user === 'Frederik' || $user === 'Gustav' || $user === 'Julius' || $user === 'Kasper' || $user === 'Laura' || $user === 'Marie' || $user === 'Nicolai' || $user === 'Maya'",
+        ".validate": "newData.hasChildren(['name', 'answer', 'updatedAt']) && newData.child('name').val() === $user && (newData.child('answer').val() === 'Ja' || newData.child('answer').val() === 'Måske' || newData.child('answer').val() === 'Nej')"
+      }
+    }
+  }
+}

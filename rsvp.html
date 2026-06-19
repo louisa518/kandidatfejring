@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forsinket kandidatfejring - Louisa Xu</title>
+    <title>Svar - Forsinket kandidatfejring</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -20,82 +20,92 @@
         <main class="content">
             <section class="hero-card small">
                 <h1>Svar</h1>
-                <p>Skal du med?</p>
+                <p id="welcomeText">Skal du med?</p>
             </section>
 
-            <!-- RESPONSE BUTTONS -->
             <section class="info-card">
                 <div class="button-list">
-                    <button onclick="saveResponse('Ja')" class="response-button yes">Ja</button>
-                    <button onclick="saveResponse('Måske')" class="response-button maybe">Måske</button>
-                    <button onclick="saveResponse('Nej')" class="response-button no">Nej</button>
+                    <button data-answer="Ja" class="response-button yes">Ja</button>
+                    <button data-answer="Måske" class="response-button maybe">Måske</button>
+                    <button data-answer="Nej" class="response-button no">Nej</button>
                 </div>
             </section>
 
-            <section class="info-card" id="statusMessage">
+            <section class="info-card response-message" id="statusMessage">
                 <h2>Venter på dit svar...</h2>
                 <p>Klik på en knap ovenfor.</p>
             </section>
 
             <section class="info-card">
                 <h2>Hvorfor dit svar er vigtigt</h2>
-                <p>Så Louisa ved hvor mange øl og mad hun skal købe!</p>
+                <p>Så Louisa ved, hvor mange øl og hvor meget mad hun skal købe.</p>
             </section>
         </main>
     </div>
 
-    <script>
-        const RESPONSE_ENDPOINT = 'http://localhost:3000/api/rsvp';
-        const statusMessage = document.getElementById('statusMessage');
-        const currentUser = localStorage.getItem('event-user');
+    <script type="module">
+        import { getUserByKey, VALID_ANSWERS } from "./event-data.js";
+        import { listenToRsvps, saveRsvp } from "./firebase-rsvp.js";
 
-        if (!currentUser) {
-            window.location.href = 'index.html';
+        const statusMessage = document.getElementById("statusMessage");
+        const welcomeText = document.getElementById("welcomeText");
+        const currentUser = localStorage.getItem("event-user");
+        const user = getUserByKey(currentUser);
+
+        if (!currentUser || !user) {
+            window.location.href = "index.html";
+        } else {
+            welcomeText.textContent = `Skal du med, ${user.name.split(" ")[0]}?`;
         }
 
-        const savedAnswer = localStorage.getItem(`rsvp-${currentUser}`);
-        if (savedAnswer) {
-            updateStatusMessage(savedAnswer, 'Dit svar er hentet fra din browser.');
-        }
-
-        function updateStatusMessage(answer, syncText = '') {
-            const prefix = answer === 'Nej' ? 'Øv!' : 'Tak!';
-            const syncNote = syncText ? `<p style="margin-top: 10px; color: var(--muted);">${syncText}</p>` : '';
+        function updateStatusMessage(answer, syncText = "") {
+            const prefix = answer === "Nej" ? "Øv!" : "Tak!";
+            statusMessage.classList.add("filled");
             statusMessage.innerHTML = `
                 <h2>${prefix} Du svarede: ${answer}</h2>
                 <p>Vil du ændre dit svar? Klik på en anden knap.</p>
-                ${syncNote}
+                ${syncText ? `<p class="muted-note">${syncText}</p>` : ""}
             `;
         }
 
-        async function saveResponse(answer) {
-            localStorage.setItem(`rsvp-${currentUser}`, answer);
-            updateStatusMessage(answer, 'Forsøger at gemme dit svar centralt...');
-
-            if (!RESPONSE_ENDPOINT || RESPONSE_ENDPOINT.includes('YOUR_BACKEND_URL')) {
-                updateStatusMessage(answer, 'Svar gemt lokalt i browseren. Indsæt din backend-URL for at gemme centralt.');
-                return;
-            }
-
-            try {
-                const response = await fetch(RESPONSE_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ name: currentUser, answer }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                updateStatusMessage(answer, 'Dit svar er sendt til backend og registreret centralt.');
-            } catch (error) {
-                console.error('Central opdatering mislykkedes:', error);
-                updateStatusMessage(answer, 'Svar gemt lokalt, men central opdatering mislykkedes.');
-            }
+        function showError(message) {
+            statusMessage.classList.add("error");
+            statusMessage.innerHTML = `<h2>Der skete en fejl</h2><p>${message}</p>`;
         }
+
+        document.querySelectorAll("[data-answer]").forEach(button => {
+            button.addEventListener("click", async () => {
+                const answer = button.dataset.answer;
+                if (!VALID_ANSWERS.includes(answer)) return;
+
+                localStorage.setItem(`rsvp-${currentUser}`, answer);
+                updateStatusMessage(answer, "Gemmer dit svar live...");
+
+                try {
+                    await saveRsvp(currentUser, answer);
+                    updateStatusMessage(answer, "Dit svar er gemt live.");
+                } catch (error) {
+                    console.error(error);
+                    updateStatusMessage(answer, "Svaret er gemt lokalt, men kunne ikke gemmes i Firebase. Tjek firebase-config.js og dine database-regler.");
+                }
+            });
+        });
+
+        listenToRsvps(
+            data => {
+                const answer = data[currentUser]?.answer || localStorage.getItem(`rsvp-${currentUser}`);
+                if (answer) updateStatusMessage(answer, "Dit svar er hentet live fra Firebase.");
+            },
+            error => {
+                console.error(error);
+                const savedAnswer = localStorage.getItem(`rsvp-${currentUser}`);
+                if (savedAnswer) {
+                    updateStatusMessage(savedAnswer, "Dit svar er hentet fra denne browser. Firebase er ikke forbundet endnu.");
+                } else {
+                    showError("Firebase er ikke forbundet endnu. Udfyld firebase-config.js, og tjek dine database-regler.");
+                }
+            }
+        );
     </script>
 </body>
 </html>

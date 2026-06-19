@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +20,7 @@
         <main class="content">
             <section class="hero-card">
                 <div class="hero-image-wrapper">
-                    <img src="event-image.png" alt="Event venue with outdoor seating">
+                    <img src="event-image.png" alt="Gård med udendørs siddepladser">
                 </div>
                 <div class="hero-visual">🍻</div>
                 <h1>Kom og drik nogle øl!</h1>
@@ -32,34 +32,33 @@
             </section>
 
             <section class="info-card">
-                <h2>Event details</h2>
+                <h2>Praktisk info</h2>
                 <p><strong>Dato:</strong> Tirsdag den 7. juli</p>
                 <p><strong>Tidspunkt:</strong> Kl. 13.00 – 21.00</p>
                 <p><strong>Adresse:</strong> Holger Danskes Vej 28, 2000 Frederiksberg</p>
             </section>
 
             <section class="info-card">
-                <h2>What to expect</h2>
+                <h2>Hvad kan du forvente?</h2>
                 <ul>
                     <li>Masser af øl</li>
-                    <li>Mad (Bestiller nok pizza)</li>
-                    <li>Forhåbenlig god stemning og godt selskab</li>
+                    <li>Mad — jeg bestiller nok pizza</li>
+                    <li>Forhåbentlig god stemning og godt selskab</li>
                 </ul>
             </section>
 
             <section class="info-card">
                 <h2>Need-to-know</h2>
-                <p>Det bliver holdt i gården, så vi krydser fingre for godt vejr. Hvis vejret driller, finder jeg en løsning — men hvis det regner meget, kan det være at jeg desværre blive nødt til at aflyse.
-Da det stadig er en hverdag, tager vi hensyn til naboerne. Derfor kan det være, at vi rykker videre omkring kl. 20 eller 21. 
-- Louisa </p>
+                <p>Det bliver holdt i gården, så vi krydser fingre for godt vejr. Hvis vejret driller, finder jeg en løsning — men hvis det regner meget, kan det være, at jeg desværre bliver nødt til at aflyse.</p>
+                <p>Da det stadig er en hverdag, tager vi hensyn til naboerne. Derfor kan det være, at vi rykker videre omkring kl. 20 eller 21.</p>
+                <p>– Louisa</p>
             </section>
         </main>
     </div>
-    <script>
-        const currentUser = localStorage.getItem('event-user');
-        if (!currentUser) {
-            window.location.href = 'index.html';
-        }
+
+    <script type="module">
+        const currentUser = localStorage.getItem("event-user");
+        if (!currentUser) window.location.href = "index.html";
     </script>
 </body>
 </html>

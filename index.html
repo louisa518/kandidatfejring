@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - Forsinket kandidatfejring</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="page-shell">
-        <main class="content">
+        <main class="content login-content">
             <section class="hero-card small">
+                <div class="hero-visual">🍻</div>
                 <h1>Log ind</h1>
-                <p>Indtast dit brugernavn og kode for at fortsætte til invitationen.</p>
+                <p>Indtast dit brugernavn og kode for at se invitationen.</p>
             </section>
 
             <section class="info-card">
                 <label for="username">Brugernavn</label>
-                <input id="username" type="text" placeholder="" autocomplete="username" spellcheck="false">
+                <input id="username" type="text" autocomplete="username" spellcheck="false">
             </section>
 
             <section class="info-card">
                 <label for="code">Kode</label>
-                <input id="code" type="password" placeholder="" autocomplete="current-password" spellcheck="false">
+                <input id="code" type="password" autocomplete="current-password" spellcheck="false">
             </section>
 
             <section class="button-group">
@@ -29,49 +30,55 @@
             </section>
 
             <section class="info-card" id="loginMessage">
-                 <p><strong>Brugernavn:</strong> Dit fornavn med stort begyndelsesbogstav.<br><strong>Adgangskode:</strong> Dit fornavn med stort begyndelsesbogstav efterfulgt af 123.</p>
-                <p><strong>Eksempel:</strong></p><p><strong>Brugernavn:</strong> Jens<br><strong>Kode:</strong> Jens123</p>
+                <p><strong>Brugernavn:</strong> dit fornavn med stort begyndelsesbogstav.</p>
+                <p><strong>Adgangskode:</strong> dit fornavn med stort begyndelsesbogstav efterfulgt af 123.</p>
+                <p><strong>Eksempel:</strong><br>Brugernavn: Jens<br>Kode: Jens123</p>
             </section>
         </main>
     </div>
 
-    <script>
-        const usernameInput = document.getElementById('username');
-        const codeInput = document.getElementById('code');
-        const loginMessage = document.getElementById('loginMessage');
-        const loginButton = document.getElementById('loginButton');
-        const invitedUsers = ['Louisa','Anders','Emma','Frederik','Gustav','Julius','Kasper','Laura','Marie','Nicolai','Maya'];
+    <script type="module">
+        import { INVITED_USERS, normalizeUsername } from "./event-data.js";
+
+        const usernameInput = document.getElementById("username");
+        const codeInput = document.getElementById("code");
+        const loginMessage = document.getElementById("loginMessage");
+        const loginButton = document.getElementById("loginButton");
+        const invitedKeys = INVITED_USERS.map(user => user.key);
 
         function showMessage(text, isError = false) {
-            loginMessage.innerHTML = `<p style="color: ${isError ? '#b7484e' : '#505f38'}; margin: 0;">${text}</p>`;
+            loginMessage.classList.toggle("error", isError);
+            loginMessage.innerHTML = `<p>${text}</p>`;
         }
 
         function login() {
             const username = usernameInput.value.trim();
             const code = codeInput.value.trim();
+            const normalized = normalizeUsername(username);
+
             if (!username || !code) {
-                showMessage('Begge felter skal udfyldes.', true);
+                showMessage("Begge felter skal udfyldes.", true);
                 return;
             }
-            const normalized = username.charAt(0).toUpperCase() + username.slice(1);
-            if (!invitedUsers.includes(normalized)) {
-                showMessage('Kun inviterede kan logge ind.', true);
+
+            if (!invitedKeys.includes(normalized)) {
+                showMessage("Kun inviterede gæster kan logge ind.", true);
                 return;
             }
-            const expectedCode = normalized + '123';
-            if (code === expectedCode && username === normalized) {
-                localStorage.setItem('event-user', normalized);
-                window.location.href = 'invitation.html';
+
+            const expectedCode = `${normalized}123`;
+
+            if (code === expectedCode) {
+                localStorage.setItem("event-user", normalized);
+                window.location.href = "invitation.html";
             } else {
-                showMessage('Forkert brugernavn eller kode. Prøv igen.', true);
+                showMessage("Forkert brugernavn eller kode. Prøv igen.", true);
             }
         }
 
-        loginButton.addEventListener('click', login);
-        document.addEventListener('keydown', event => {
-            if (event.key === 'Enter') {
-                login();
-            }
+        loginButton.addEventListener("click", login);
+        document.addEventListener("keydown", event => {
+            if (event.key === "Enter") login();
         });
     </script>
 </body>
