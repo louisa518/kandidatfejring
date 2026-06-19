@@ -70,7 +70,7 @@
     </div>
 
     <script>
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwDJFF6IiPnd5rg1c27QbnsvM1t8kgqbUDuZFsXnI7qXsHudfS0dIS_1O40BH4GaJmfsg/exec';
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyKvO_3AwBENHD5zZmfcy6lc8UHn8ZSff95rxPBDw7hfRJne3PpjJ_fwdwFHDic1gLUZQ/exec?callback=handleResponses';
         const yourResponse = document.getElementById('yourResponse');
         const attendingList = document.getElementById('attendingList');
         const maybeList = document.getElementById('maybeList');
@@ -83,73 +83,47 @@
 
         const invitedUsers = ['Louisa','Anders','Emma','Frederik','Gustav','Julius','Kasper','Laura','Marie','Nicolai','Maya'];
 
-        async function loadResponses() {
-            try {
-                // Fetch from Google Sheets
-                const response = await fetch(GOOGLE_SHEETS_URL);
-                const data = await response.json();
+        function handleResponses(data) {
+            // Clear lists
+            attendingList.innerHTML = '';
+            maybeList.innerHTML = '';
+            noList.innerHTML = '';
+            
+            // Populate from Google Sheets data
+            invitedUsers.forEach(name => {
+                const answer = data[name];
+                if (!answer) return;
                 
-                // Clear lists
-                attendingList.innerHTML = '';
-                maybeList.innerHTML = '';
-                noList.innerHTML = '';
+                const listItem = document.createElement('li');
+                listItem.textContent = name;
                 
-                // Populate from Google Sheets data
-                invitedUsers.forEach(name => {
-                    const answer = data[name];
-                    if (!answer) return;
-                    
-                    const listItem = document.createElement('li');
-                    listItem.textContent = name;
-                    
-                    if (answer === 'Ja') {
-                        attendingList.appendChild(listItem);
-                    } else if (answer === 'Måske') {
-                        maybeList.appendChild(listItem);
-                    } else if (answer === 'Nej') {
-                        noList.appendChild(listItem);
-                    }
-                });
-                
-                // Show current user's answer
-                if (data[currentUser]) {
-                    yourResponse.textContent = `Du svarede: ${data[currentUser]}`;
-                } else {
-                    yourResponse.textContent = 'Du har ikke svaret endnu.';
+                if (answer === 'Ja') {
+                    attendingList.appendChild(listItem);
+                } else if (answer === 'Måske') {
+                    maybeList.appendChild(listItem);
+                } else if (answer === 'Nej') {
+                    noList.appendChild(listItem);
                 }
-            } catch (error) {
-                console.error('Error loading from Google Sheets, falling back to localStorage:', error);
-                
-                // Fallback to localStorage
-                invitedUsers.forEach(name => {
-                    const saved = localStorage.getItem(`rsvp-${name}`);
-                    if (!saved) return;
-                    
-                    const listItem = document.createElement('li');
-                    listItem.textContent = name;
-                    
-                    if (saved === 'Ja') {
-                        attendingList.appendChild(listItem);
-                    } else if (saved === 'Måske') {
-                        maybeList.appendChild(listItem);
-                    } else if (saved === 'Nej') {
-                        noList.appendChild(listItem);
-                    }
-                });
-                
-                const saved = localStorage.getItem(`rsvp-${currentUser}`);
-                if (saved) {
-                    yourResponse.textContent = `Du svarede: ${saved}`;
-                } else {
-                    yourResponse.textContent = 'Du har ikke svaret endnu.';
-                }
+            });
+            
+            // Show current user's answer
+            if (data[currentUser]) {
+                yourResponse.textContent = `Du svarede: ${data[currentUser]}`;
+            } else {
+                yourResponse.textContent = 'Du har ikke svaret endnu.';
             }
+        }
+
+        function loadResponses() {
+            const script = document.createElement('script');
+            script.src = GOOGLE_SHEETS_URL;
+            document.head.appendChild(script);
         }
 
         // Load responses when page opens
         loadResponses();
 
-        // Refresh every 3 seconds to show live updates
+        // Refresh every 3 seconds
         setInterval(loadResponses, 3000);
     </script>
 </body>
