@@ -1,0 +1,32 @@
+name: RSVP Updater
+
+on:
+  repository_dispatch:
+    types: [rsvp-update]
+
+permissions:
+  contents: write
+
+jobs:
+  update-responses:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Save payload
+        run: |
+          echo '${{ toJson(github.event.client_payload) }}' > /tmp/payload.json
+
+      - name: Update responses.json
+        run: |
+          node -e "const fs=require('fs'); const payload=JSON.parse(fs.readFileSync('/tmp/payload.json','utf8')); const file='responses.json'; const data=JSON.parse(fs.readFileSync(file,'utf8')); data[payload.name]=payload.answer; fs.writeFileSync(file, JSON.stringify(data, null, 2));"
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add responses.json
+          git commit -m "Update response: ${{ github.event.client_payload.name }} -> ${{ github.event.client_payload.answer }}" || echo "No changes"
+          git push
