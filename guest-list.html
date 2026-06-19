@@ -70,6 +70,7 @@
     </div>
 
     <script>
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzvevXqFkk0tga1kF5ldWdF84TlJg8B0_-xjW5MsWMqBS8hvQbHS3vfAFXskWZwnb9cTA/exec';
         const yourResponse = document.getElementById('yourResponse');
         const attendingList = document.getElementById('attendingList');
         const maybeList = document.getElementById('maybeList');
@@ -81,26 +82,75 @@
         }
 
         const invitedUsers = ['Louisa','Anders','Emma','Frederik','Gustav','Julius','Kasper','Laura','Marie','Nicolai','Maya'];
-        invitedUsers.forEach(name => {
-            const saved = localStorage.getItem(`rsvp-${name}`);
-            if (!saved) return;
-            const listItem = document.createElement('li');
-            listItem.textContent = name;
-            if (saved === 'Ja') {
-                attendingList.appendChild(listItem);
-            } else if (saved === 'Måske') {
-                maybeList.appendChild(listItem);
-            } else if (saved === 'Nej') {
-                noList.appendChild(listItem);
-            }
-        });
 
-        const saved = localStorage.getItem(`rsvp-${currentUser}`);
-        if (saved) {
-            yourResponse.textContent = `Du svarede: ${saved}`;
-        } else {
-            yourResponse.textContent = 'Du har ikke svaret endnu.';
+        async function loadResponses() {
+            try {
+                // Fetch from Google Sheets
+                const response = await fetch(GOOGLE_SHEETS_URL);
+                const data = await response.json();
+                
+                // Clear lists
+                attendingList.innerHTML = '';
+                maybeList.innerHTML = '';
+                noList.innerHTML = '';
+                
+                // Populate from Google Sheets data
+                invitedUsers.forEach(name => {
+                    const answer = data[name];
+                    if (!answer) return;
+                    
+                    const listItem = document.createElement('li');
+                    listItem.textContent = name;
+                    
+                    if (answer === 'Ja') {
+                        attendingList.appendChild(listItem);
+                    } else if (answer === 'Måske') {
+                        maybeList.appendChild(listItem);
+                    } else if (answer === 'Nej') {
+                        noList.appendChild(listItem);
+                    }
+                });
+                
+                // Show current user's answer
+                if (data[currentUser]) {
+                    yourResponse.textContent = `Du svarede: ${data[currentUser]}`;
+                } else {
+                    yourResponse.textContent = 'Du har ikke svaret endnu.';
+                }
+            } catch (error) {
+                console.error('Error loading from Google Sheets, falling back to localStorage:', error);
+                
+                // Fallback to localStorage
+                invitedUsers.forEach(name => {
+                    const saved = localStorage.getItem(`rsvp-${name}`);
+                    if (!saved) return;
+                    
+                    const listItem = document.createElement('li');
+                    listItem.textContent = name;
+                    
+                    if (saved === 'Ja') {
+                        attendingList.appendChild(listItem);
+                    } else if (saved === 'Måske') {
+                        maybeList.appendChild(listItem);
+                    } else if (saved === 'Nej') {
+                        noList.appendChild(listItem);
+                    }
+                });
+                
+                const saved = localStorage.getItem(`rsvp-${currentUser}`);
+                if (saved) {
+                    yourResponse.textContent = `Du svarede: ${saved}`;
+                } else {
+                    yourResponse.textContent = 'Du har ikke svaret endnu.';
+                }
+            }
         }
+
+        // Load responses when page opens
+        loadResponses();
+
+        // Refresh every 3 seconds to show live updates
+        setInterval(loadResponses, 3000);
     </script>
 </body>
 </html>
