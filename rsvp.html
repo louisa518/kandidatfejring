@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forsinket kandidatfejring - Louisa Xu</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="site-header">
+            <div class="brand">Forsinket kandidatfejring - Louisa Xu</div>
+            <nav class="menu-bar">
+                <a href="invitation.html">Forside</a>
+                <a href="rsvp.html" class="active">Svar</a>
+                <a href="guest-list.html">Gæsteliste</a>
+            </nav>
+        </header>
+
+        <main class="content">
+            <section class="hero-card small">
+                <h1>Svar</h1>
+                <p>Skal du med?</p>
+            </section>
+
+            <!-- RESPONSE BUTTONS -->
+            <section class="info-card">
+                <div class="button-list">
+                    <button onclick="saveResponse('Ja')" class="response-button yes">Ja</button>
+                    <button onclick="saveResponse('Måske')" class="response-button maybe">Måske</button>
+                    <button onclick="saveResponse('Nej')" class="response-button no">Nej</button>
+                </div>
+            </section>
+
+            <section class="info-card" id="statusMessage">
+                <h2>Venter på dit svar...</h2>
+                <p>Klik på en knap ovenfor.</p>
+            </section>
+
+            <section class="info-card">
+                <h2>Hvorfor dit svar er vigtigt</h2>
+                <p>Så Louisa ved hvor mange øl og mad hun skal købe!</p>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwDLqFOXb_rv-coUt0kZM4bvVcBi7T3f436Sr00yly03yT1uR0hyJg8xJs7kZJ4PgA5Hg/exec';
+        const statusMessage = document.getElementById('statusMessage');
+        const currentUser = localStorage.getItem('event-user');
+
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+
+        // Check if user already answered and display
+        const savedAnswer = localStorage.getItem(`rsvp-${currentUser}`);
+        if (savedAnswer) {
+            updateStatusMessage(savedAnswer);
+        }
+
+        function updateStatusMessage(answer) {
+            const prefix = answer === 'Nej' ? 'Øv!' : 'Tak!';
+            statusMessage.innerHTML = `<h2>${prefix} Du svarede: ${answer}</h2><p>Vil du ændre dit svar? Klik på en anden knap.</p>`;
+        }
+
+        async function saveResponse(answer) {
+            // Update UI
+            updateStatusMessage(answer);
+
+            // Save to localStorage (backup)
+            localStorage.setItem(`rsvp-${currentUser}`, answer);
+
+            try {
+                // Send to Google Sheets
+                const response = await fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'name': currentUser,
+                        'answer': answer
+                    })
+                });
+
+                console.log('Response sent to Google Sheets');
+            } catch (error) {
+                console.error('Error sending to Google Sheets:', error);
+                // Data still saved locally
+            }
+        }
+    </script>
+</body>
+</html>
